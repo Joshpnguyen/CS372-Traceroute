@@ -271,8 +271,14 @@ class IcmpHelperLibrary:
                     # Fetch the ICMP type and code from the received packet
                     icmpType, icmpCode = recvPacket[20:22]
                     IcmpHelperLibrary.Packet_data[1] += 1  # increment received packets
+                    self.setIcmpType(icmpType)
 
                     if icmpType == 11:  # Time Exceeded
+                        icmpErrorCodes = {
+                            0: "Time to Live exceeded in Transit",
+                            1: "Fragment Reassembly Time Exceeded"
+                        }
+
                         print("  TTL=%d    RTT=%.0f ms    Type=%d    Code=%d    %s" %
                               (
                                   self.getTtl(),
@@ -282,8 +288,18 @@ class IcmpHelperLibrary:
                                   addr[0]
                               )
                               )
+                        if icmpCode in icmpErrorCodes:
+                            print("ERROR CODE " + str(icmpCode) + ": " + icmpErrorCodes[icmpCode])
 
                     elif icmpType == 3:  # Destination Unreachable
+                        icmpErrorCodes = {
+                            0: "Destination Network Unreachable",
+                            1: "Destination Host Unreachable",
+                            3: "Destination Port Unreachable",
+                            6: "Destination Network Unknown",
+                            7: "Destination Host Unknown"
+                        }
+
                         print("  TTL=%d    RTT=%.0f ms    Type=%d    Code=%d    %s" %
                               (
                                   self.getTtl(),
@@ -293,6 +309,8 @@ class IcmpHelperLibrary:
                                   addr[0]
                               )
                               )
+                        if icmpCode in icmpErrorCodes:
+                            print("ERROR CODE " + str(icmpCode) + ": " + icmpErrorCodes[icmpCode])
 
                     elif icmpType == 0:  # Echo Reply
                         icmpReplyPacket = IcmpHelperLibrary.IcmpPacket_EchoReply(recvPacket)
@@ -302,11 +320,12 @@ class IcmpHelperLibrary:
                         return  # Echo reply is the end and therefore should return
 
                     else:
-                        print("error")
+                        print("ERROR TYPE:" + str(icmpType))
             except timeout:
                 print("  *        *        *        *        *    Request timed out (By Exception).")
             finally:
                 mySocket.close()
+                return self.getIcmpType()
 
         def printIcmpPacketHeader_hex(self):
             print("Header Size: ", len(self.__header))
@@ -558,17 +577,19 @@ class IcmpHelperLibrary:
     def __sendIcmpTraceRoute(self, host):
         print("sendIcmpTraceRoute Started...") if self.__DEBUG_IcmpHelperLibrary else 0
         # Build code for trace route here
-        icmpCode = 1
-        SequenceNumber = 0
+        icmpType = 1
+        SequenceNumber = 1
 
-        while icmpCode != 0:
+        while icmpType != 0:
             traceRoutePacket = IcmpHelperLibrary.IcmpPacket()
+            traceRoutePacket.setTtl(SequenceNumber)
 
             packetIdentifier = (os.getpid() & 0xffff)
             traceRoutePacketSequenceNumber = SequenceNumber
 
             traceRoutePacket.buildPacket_echoRequest(packetIdentifier, traceRoutePacketSequenceNumber)
             traceRoutePacket.setIcmpTarget(host)
+            icmpType = traceRoutePacket.sendEchoRequest()  # Build IP
 
             traceRoutePacket.printIcmpPacketHeader_hex() if self.__DEBUG_IcmpHelperLibrary else 0
             traceRoutePacket.printIcmpPacket_hex() if self.__DEBUG_IcmpHelperLibrary else 0
@@ -603,12 +624,12 @@ def main():
 
     # Choose one of the following by uncommenting out the line
     # icmpHelperPing.sendPing("209.233.126.254")
-    icmpHelperPing.sendPing("www.totallynotarealsite.com")
+    # icmpHelperPing.sendPing("www.totallynotarealsite.com")
     # icmpHelperPing.sendPing("protonmail.com")
     # icmpHelperPing.sendPing("www.google.com")
     # icmpHelperPing.sendPing("oregonstate.edu")
     # icmpHelperPing.sendPing("gaia.cs.umass.edu")
-    # icmpHelperPing.traceRoute("oregonstate.edu")
+    icmpHelperPing.traceRoute("oregonstate.edu")
 
 
 if __name__ == "__main__":
