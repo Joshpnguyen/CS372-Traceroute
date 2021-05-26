@@ -602,11 +602,12 @@ def main():
     icmpHelperPing = IcmpHelperLibrary()
 
     # Choose one of the following by uncommenting out the line
-    icmpHelperPing.sendPing("209.233.126.254")
+    # icmpHelperPing.sendPing("209.233.126.254")
+    icmpHelperPing.sendPing("www.totallynotarealsite.com")
+    # icmpHelperPing.sendPing("protonmail.com")
     # icmpHelperPing.sendPing("www.google.com")
-    # icmpHelperPing.sendPing("traceroute.sdn.dk/cgi-bin/nph-traceroute")
     # icmpHelperPing.sendPing("oregonstate.edu")
-    icmpHelperPing.sendPing("gaia.cs.umass.edu")
+    # icmpHelperPing.sendPing("gaia.cs.umass.edu")
     # icmpHelperPing.traceRoute("oregonstate.edu")
 
 
