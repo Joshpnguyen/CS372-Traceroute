@@ -64,7 +64,7 @@ class IcmpHelperLibrary:
         __packetChecksum = 0  # Valid values are 0-65535 (unsigned short, 16 bits)
         __packetIdentifier = 0  # Valid values are 0-65535 (unsigned short, 16 bits)
         __packetSequenceNumber = 0  # Valid values are 0-65535 (unsigned short, 16 bits)
-        __ipTimeout = 30
+        __ipTimeout = 10
         __ttl = 255  # Time to live
 
         __DEBUG_IcmpPacket = False  # Allows for debug output
@@ -274,10 +274,6 @@ class IcmpHelperLibrary:
                     self.setIcmpType(icmpType)
 
                     if icmpType == 11:  # Time Exceeded
-                        icmpErrorCodes = {
-                            0: "Time to Live exceeded in Transit",
-                            1: "Fragment Reassembly Time Exceeded"
-                        }
 
                         print("  TTL=%d    RTT=%.0f ms    Type=%d    Code=%d    %s" %
                               (
@@ -288,17 +284,8 @@ class IcmpHelperLibrary:
                                   addr[0]
                               )
                               )
-                        if icmpCode in icmpErrorCodes:
-                            print("ERROR CODE " + str(icmpCode) + ": " + icmpErrorCodes[icmpCode])
 
                     elif icmpType == 3:  # Destination Unreachable
-                        icmpErrorCodes = {
-                            0: "Destination Network Unreachable",
-                            1: "Destination Host Unreachable",
-                            3: "Destination Port Unreachable",
-                            6: "Destination Network Unknown",
-                            7: "Destination Host Unknown"
-                        }
 
                         print("  TTL=%d    RTT=%.0f ms    Type=%d    Code=%d    %s" %
                               (
@@ -309,8 +296,6 @@ class IcmpHelperLibrary:
                                   addr[0]
                               )
                               )
-                        if icmpCode in icmpErrorCodes:
-                            print("ERROR CODE " + str(icmpCode) + ": " + icmpErrorCodes[icmpCode])
 
                     elif icmpType == 0:  # Echo Reply
                         icmpReplyPacket = IcmpHelperLibrary.IcmpPacket_EchoReply(recvPacket)
@@ -533,7 +518,7 @@ class IcmpHelperLibrary:
     #                                                                                                                  #
     #                                                                                                                  #
     # ################################################################################################################ #
-    __DEBUG_IcmpHelperLibrary = False  # Allows for debug output
+    __DEBUG_IcmpHelperLibrary = False # Allows for debug output
     RTT_times = []
     Packet_data = [0, 0]  # Index 0 = number of packets set, Index 1 = number of packets received
 
@@ -565,8 +550,24 @@ class IcmpHelperLibrary:
             icmpPacket.printIcmpPacket_hex() if self.__DEBUG_IcmpHelperLibrary else 0
             # we should be confirming values are correct, such as identifier and sequence number and data
 
+            icmpErrorTypesCodes = {
+                3: {0: "Destination Network Unreachable",
+                    1: "Destination Host Unreachable",
+                    3: "Destination Port Unreachable",
+                    6: "Destination Network Unknown",
+                    7: "Destination Host Unknown"},
+
+                11: {0: "Time to Live exceeded in Transit",
+                    1: "Fragment Reassembly Time Exceeded"}
+                }
+            # print error codes
+            if (icmpPacket.getIcmpType() != 0) and (icmpPacket.getIcmpType() in icmpErrorTypesCodes):
+                print("ERROR ICMP type " + icmpPacket.getIcmpType() + ", ICMP code " + icmpPacket.getIcmpCode() +
+                      ": " + icmpErrorTypesCodes[icmpPacket.getIcmpType()][icmpPacket.getIcmpCode()])
+
         # print RTT statistics
         average_RTT = sum(self.RTT_times) / len(self.RTT_times) * 1000
+        print(self.RTT_times)
         print("\nPing statistics for " + host + ":")
         print("RTT Times: Minimum=%d ms, Maximum=%d ms, Average=%d ms" %
               (min(self.RTT_times) * 1000, max(self.RTT_times) * 1000, average_RTT))
@@ -624,13 +625,15 @@ def main():
 
     # Choose one of the following by uncommenting out the line
     # icmpHelperPing.sendPing("209.233.126.254")
-    # icmpHelperPing.sendPing("www.totallynotarealsite.com")
-    # icmpHelperPing.sendPing("protonmail.com")
+    # icmpHelperPing.sendPing("www.tumori.nu")
     # icmpHelperPing.sendPing("www.google.com")
     # icmpHelperPing.sendPing("oregonstate.edu")
     # icmpHelperPing.sendPing("gaia.cs.umass.edu")
-    icmpHelperPing.traceRoute("oregonstate.edu")
-
+    # icmpHelperPing.sendPing("linkwan.com")
+    # icmpHelperPing.traceRoute("oregonstate.edu")
+    # icmpHelperPing.traceRoute("209.233.126.254")
+    # icmpHelperPing.traceRoute("protonmail.com")
+    icmpHelperPing.traceRoute("www.usc.edu")
 
 if __name__ == "__main__":
     main()
