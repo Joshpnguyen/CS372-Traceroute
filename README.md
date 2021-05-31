@@ -1,2 +1,3 @@
 # CS372-Traceroute
-CS 372 Project: Traceroute
+
+This program is an implementation of a traceroute (tracert) program using Python sockets.
